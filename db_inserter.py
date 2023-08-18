@@ -29,12 +29,14 @@ class DbInserter:
                 connection = mysql.connector.connect(host=self.host, user=self.user, password=self.pwd,
                                                      database=self.database_name)
                 cursor = connection.cursor() 
+                # Setting connection_open to be able to close the db connection it if an error occur.
                 self.connection_open = True
                 # Making the chunk of data into a list of tuples.
                 values = [tuple(x) for x in chunk.to_numpy()]
                 # Inserting the data.
                 cursor.executemany(query, values)
                 connection.commit()
+                del values
                 # Closing the connection to free up database resource between chunks.
                 cursor.close()
                 connection.close()
