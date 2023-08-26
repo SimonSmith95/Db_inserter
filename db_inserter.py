@@ -27,13 +27,13 @@ class DbInserter:
             query = f"INSERT INTO {self.table_name} ({columns}) VALUES ({placeholders});"
             chunk_size = 1000
             for _, chunk in df.groupby(np.arange(len(df)) // chunk_size):
+                # Making the chunk of data into a list of tuples.
+                values = [tuple(x) for x in chunk.to_numpy()]
                 connection = mysql.connector.connect(host=self.host, user=self.user, password=self.pwd,
                                                      database=self.database_name)
                 cursor = connection.cursor()
                 # Keeping track if connection is open to close if error.
                 self.connection_open = True
-                # Making the chunk of data into a list of tuples.
-                values = [tuple(x) for x in chunk.to_numpy()]
                 # Inserting the data.
                 cursor.executemany(query, values)
                 connection.commit()
