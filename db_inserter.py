@@ -1,6 +1,7 @@
 import mysql.connector
 import numpy as np
 import pandas as pd
+from PyQt5.QtWidgets import QApplication, QErrorMessage
 
 
 class DbInserter:
@@ -13,13 +14,13 @@ class DbInserter:
         self.host = hup_list[0]
         self.user = hup_list[1]
         self.pwd = hup_list[2]
-        self.database_name = 'name_of_database'
+        self.database_name = 'stock_db'
         self.table_name = 'name_of_table_in_database'
         self.connection_open = False
 
     def insert_df(self, df):
         try:
-            # Making a comma seperated string with all the columns in the dataframe.
+            # Making a comma separated string with all the columns in the dataframe.
             columns = ', '.join(df.columns)
             placeholders = ['%s' for i in df.columns]
             placeholders = ', '.join(placeholders)
@@ -28,8 +29,8 @@ class DbInserter:
             for _, chunk in df.groupby(np.arange(len(df)) // chunk_size):
                 connection = mysql.connector.connect(host=self.host, user=self.user, password=self.pwd,
                                                      database=self.database_name)
-                cursor = connection.cursor() 
-                # Setting connection_open to be able to close the db connection it if an error occur.
+                cursor = connection.cursor()
+                # Keeping track if connection is open to close if error.
                 self.connection_open = True
                 # Making the chunk of data into a list of tuples.
                 values = [tuple(x) for x in chunk.to_numpy()]
@@ -41,16 +42,24 @@ class DbInserter:
                 cursor.close()
                 connection.close()
                 self.connection_open = False
-            del df
+
+
         except mysql.connector.Error as error:
-            print(f'Insertion of data failed {error}')
+            connection.rollback()
+            # Open window to inform user of insertion error.
+            self.inform_of_error(error)
+
         finally:
-            # Making sure the connection to the db is closed.
             if self.connection_open:
                 cursor.close()
                 connection.close()
 
-
+    @staticmethod
+    def inform_of_error(error):
+        app = QApplication([])
+        error_dialog = QErrorMessage()
+        error_dialog.showMessage(f'Insertion into database failed! (error: {error})')
+        app.exec_()
 
 
 
