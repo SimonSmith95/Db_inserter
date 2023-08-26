@@ -14,7 +14,7 @@ class DbInserter:
         self.host = hup_list[0]
         self.user = hup_list[1]
         self.pwd = hup_list[2]
-        self.database_name = 'stock_db'
+        self.database_name = 'name_of_database'
         self.table_name = 'name_of_table_in_database'
         self.connection_open = False
 
